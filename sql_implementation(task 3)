@@ -1,0 +1,119 @@
+CREATE DATABASE CompanyDB;
+USE CompanyDB;
+CREATE TABLE DEPARTMENT (
+    DNUM INT PRIMARY KEY,
+    DName NVARCHAR(50) NOT NULL,
+    Location NVARCHAR(100) NULL,
+    ManagerSSN CHAR(9) NULL,
+    ManagerHireDate DATE NULL
+);
+CREATE TABLE EMPLOYEE (
+    SSN CHAR(9) PRIMARY KEY,
+    Fname NVARCHAR(50) NOT NULL,
+    Lname NVARCHAR(50) NOT NULL,
+    BirthDate DATE NOT NULL,
+    Gender CHAR(1) NOT NULL,
+    DeptNo INT NOT NULL,
+    SupervisorSSN CHAR(9) NULL,
+
+    CONSTRAINT FK_Dept FOREIGN KEY (DeptNo)
+        REFERENCES DEPARTMENT(DNUM),
+    CONSTRAINT FK_Supervisor FOREIGN KEY (SupervisorSSN)
+        REFERENCES EMPLOYEE(SSN)
+);
+
+CREATE TABLE PROJECT (
+    PNumber INT PRIMARY KEY,
+    PName NVARCHAR(50) NOT NULL,
+    LocationCity NVARCHAR(50) NULL,
+    DeptNo INT NOT NULL,
+
+    CONSTRAINT FK_ProjectDept FOREIGN KEY (DeptNo) REFERENCES DEPARTMENT(DNUM)
+);
+
+CREATE TABLE WORKS_ON (
+    SSN CHAR(9) NOT NULL,
+    PNumber INT NOT NULL,
+    WorkingHours INT NOT NULL,
+    
+    PRIMARY KEY (SSN, PNumber),
+    CONSTRAINT FK_WO_Employee FOREIGN KEY (SSN) REFERENCES EMPLOYEE(SSN),
+    CONSTRAINT FK_WO_Project FOREIGN KEY (PNumber) REFERENCES PROJECT(PNumber)
+);
+
+CREATE TABLE DEPENDENT (
+    SSN CHAR(9) NOT NULL,
+    DependentName NVARCHAR(50) NOT NULL,
+    Gender CHAR(1) NOT NULL,
+    BirthDate DATE NOT NULL,
+    
+    PRIMARY KEY (SSN, DependentName),
+    CONSTRAINT FK_Dependent_Employee FOREIGN KEY (SSN)
+        REFERENCES EMPLOYEE(SSN)
+        ON DELETE CASCADE
+);
+INSERT INTO DEPARTMENT (DNUM, DName, Location)
+VALUES
+(1,'HR','Cairo'),
+(2,'IT','Giza'),
+(3,'Finance','Alex');
+
+INSERT INTO EMPLOYEE (SSN, Fname, Lname, BirthDate, Gender, DeptNo, SupervisorSSN)
+VALUES
+('1','Ali','Ahmed','1990-05-12','M',1,NULL),
+('2','Sara','Mohamed','1992-08-20','F',1,'1'),
+('3','Omar','Hassan','1988-03-15','M',2,'1'),
+('4','Mona','Khaled','1995-11-10','F',3,'3'),
+('5','Tamer','Ali','1991-07-05','M',2,'3');
+
+UPDATE DEPARTMENT
+SET ManagerSSN = '1', ManagerHireDate = '2018-01-01'
+WHERE DNUM = 1;
+
+UPDATE DEPARTMENT
+SET ManagerSSN = '3', ManagerHireDate = '2017-03-15'
+WHERE DNUM = 2;
+
+UPDATE DEPARTMENT
+SET ManagerSSN = '4', ManagerHireDate = '2019-06-20'
+WHERE DNUM = 3;
+
+ALTER TABLE DEPARTMENT
+ALTER COLUMN ManagerSSN CHAR(9) NOT NULL;
+
+ALTER TABLE DEPARTMENT
+ALTER COLUMN ManagerHireDate DATE NOT NULL;
+
+
+INSERT INTO PROJECT (PNumber, PName, LocationCity, DeptNo)
+VALUES
+(101,'ProjectA','Cairo',1),
+(102,'ProjectB','Giza',2),
+(103,'ProjectC','Alex',3);
+
+INSERT INTO WORKS_ON (SSN, PNumber, WorkingHours)
+VALUES
+('1',101,40),
+('2',101,20),
+('3',102,35),
+('4',103,30),
+('5',102,25);
+
+INSERT INTO WORKS_ON (SSN, PNumber, WorkingHours)
+VALUES
+('1',101,40),
+('2',101,20),
+('3',102,35),
+('4',103,30),
+('5',102,25);
+UPDATE EMPLOYEE
+SET DeptNo = 3
+WHERE SSN = '5';
+
+DELETE FROM DEPENDENT
+WHERE SSN = '1' AND DependentName = 'Laila';
+
+SELECT SSN, PNumber, WorkingHours
+FROM WORKS_ON;
+
+
