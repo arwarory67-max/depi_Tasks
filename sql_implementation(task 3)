@@ -112,6 +112,10 @@ VALUES
 
 select * from emp_proj
 
+alter table employee1 add  sup_id int ;
 
+alter table employee1 add constraint
+fk_supervisor foreign key (sup_id) 
+references employee1(ssn)
 
 select name from sys.tables;
