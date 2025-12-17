@@ -1,119 +1,117 @@
-CREATE DATABASE CompanyDB;
-USE CompanyDB;
-CREATE TABLE DEPARTMENT (
-    DNUM INT PRIMARY KEY,
-    DName NVARCHAR(50) NOT NULL,
-    Location NVARCHAR(100) NULL,
-    ManagerSSN CHAR(9) NULL,
-    ManagerHireDate DATE NULL
+create database newCompany;
+use newcompany;
+
+create table employee1
+(
+ssn int identity(1,1) primary key   , fname varchar(50) not null , lname varchar(50) , birthdate date 
 );
-CREATE TABLE EMPLOYEE (
-    SSN CHAR(9) PRIMARY KEY,
-    Fname NVARCHAR(50) NOT NULL,
-    Lname NVARCHAR(50) NOT NULL,
-    BirthDate DATE NOT NULL,
-    Gender CHAR(1) NOT NULL,
-    DeptNo INT NOT NULL,
-    SupervisorSSN CHAR(9) NULL,
+/*drop table employee1*/
+alter table employee1 add dep_id int not null
 
-    CONSTRAINT FK_Dept FOREIGN KEY (DeptNo)
-        REFERENCES DEPARTMENT(DNUM),
-    CONSTRAINT FK_Supervisor FOREIGN KEY (SupervisorSSN)
-        REFERENCES EMPLOYEE(SSN)
+
+create table department1
+(
+dnum int identity(1,1) primary key , dname varchar(50) unique , locations varchar(100) 
 );
+/*DBCC CHECKIDENT ('employee1', RESEED, 0);*/
 
-CREATE TABLE PROJECT (
-    PNumber INT PRIMARY KEY,
-    PName NVARCHAR(50) NOT NULL,
-    LocationCity NVARCHAR(50) NULL,
-    DeptNo INT NOT NULL,
 
-    CONSTRAINT FK_ProjectDept FOREIGN KEY (DeptNo) REFERENCES DEPARTMENT(DNUM)
+create table projects
+(
+pid int primary key identity(1,1) , pname varchar(100) unique , city varchar(100)
 );
 
-CREATE TABLE WORKS_ON (
-    SSN CHAR(9) NOT NULL,
-    PNumber INT NOT NULL,
-    WorkingHours INT NOT NULL,
-    
-    PRIMARY KEY (SSN, PNumber),
-    CONSTRAINT FK_WO_Employee FOREIGN KEY (SSN) REFERENCES EMPLOYEE(SSN),
-    CONSTRAINT FK_WO_Project FOREIGN KEY (PNumber) REFERENCES PROJECT(PNumber)
+create table dependents 
+(
+did int primary key identity(1,1) , dependent_name varchar(100), gender varchar(50) , birthdate date
 );
+/*drop table dependents*/ 
+alter table dependents add emp_id int not null
 
-CREATE TABLE DEPENDENT (
-    SSN CHAR(9) NOT NULL,
-    DependentName NVARCHAR(50) NOT NULL,
-    Gender CHAR(1) NOT NULL,
-    BirthDate DATE NOT NULL,
-    
-    PRIMARY KEY (SSN, DependentName),
-    CONSTRAINT FK_Dependent_Employee FOREIGN KEY (SSN)
-        REFERENCES EMPLOYEE(SSN)
-        ON DELETE CASCADE
-);
-INSERT INTO DEPARTMENT (DNUM, DName, Location)
+
+alter table employee1
+add constraint fk_emp_dep 
+foreign key (dep_id ) 
+references department1(dnum)
+
+
+
+alter table projects add dep_id varchar(100) not null
+
+alter table projects
+add constraint fk_dep_pro
+foreign key (dep_id)
+references department1(dnum)
+
+alter table dependents add emp_id int not null
+
+alter table dependents 
+add constraint fk_depen_emp
+foreign key (emp_id) 
+references employee1(ssn)
+on delete cascade
+
+create table emp_proj(
+emp_id int not null,
+pro_id int not null,
+working_hours decimal(5,2) not null,
+constraint pk_emp_pro primary key (emp_id,pro_id),
+constraint fk_emp_emproj foreign key (emp_id) references employee1(ssn),
+constraint fk_pro_emproj foreign key (pro_id) references projects(pid)
+)
+
+insert into department1(dname, locations )
+values
+('it','mohammed'),
+('se','ahmed'),
+('is','yasser'),
+('it','hamdy'),
+('cs','sameh')
+
+
+select * from employee1
+
+insert into employee1 (fname, lname, birthdate ,dep_id )
+values
+('ahmed','mohammed','2023-05-06',1),
+('mohammed','ahmed','2021-03-09',2),
+('moamen','yasser','2024-11-15',3),
+('gihand','hamdy','2023-06-22',4),
+('somaya','sameh','2021-12-04',2)
+
+insert into dependents (dependent_name,gender, birthdate ,emp_id )
+values
+('yehia','m','2010-05-06',1),
+('sami','m','2016-03-09',2),
+('ziyad','m','2012-11-15',3),
+('farah','f','2020-06-22',4),
+('hana','f','2018-12-04',2)
+
+update employee1
+set dep_id = 3
+where ssn =1
+
+delete from dependents where dependent_name = 'sami'
+
+select * from employee1 where dep_id = 3
+
+
+INSERT INTO projects( pname, city,dep_id)
 VALUES
-(1,'HR','Cairo'),
-(2,'IT','Giza'),
-(3,'Finance','Alex');
+('ProjectA','Cairo',1),
+('ProjectB','Giza',2),
+('ProjectC','Alex',3);
 
-INSERT INTO EMPLOYEE (SSN, Fname, Lname, BirthDate, Gender, DeptNo, SupervisorSSN)
+INSERT INTO emp_proj (emp_id, pro_id, working_hours)
 VALUES
-('1','Ali','Ahmed','1990-05-12','M',1,NULL),
-('2','Sara','Mohamed','1992-08-20','F',1,'1'),
-('3','Omar','Hassan','1988-03-15','M',2,'1'),
-('4','Mona','Khaled','1995-11-10','F',3,'3'),
-('5','Tamer','Ali','1991-07-05','M',2,'3');
+(1,2,40),
+(2,2,20),
+(3,1,35),
+(4,3,30),
+(5,3,25);
 
-UPDATE DEPARTMENT
-SET ManagerSSN = '1', ManagerHireDate = '2018-01-01'
-WHERE DNUM = 1;
-
-UPDATE DEPARTMENT
-SET ManagerSSN = '3', ManagerHireDate = '2017-03-15'
-WHERE DNUM = 2;
-
-UPDATE DEPARTMENT
-SET ManagerSSN = '4', ManagerHireDate = '2019-06-20'
-WHERE DNUM = 3;
-
-ALTER TABLE DEPARTMENT
-ALTER COLUMN ManagerSSN CHAR(9) NOT NULL;
-
-ALTER TABLE DEPARTMENT
-ALTER COLUMN ManagerHireDate DATE NOT NULL;
+select * from emp_proj
 
 
-INSERT INTO PROJECT (PNumber, PName, LocationCity, DeptNo)
-VALUES
-(101,'ProjectA','Cairo',1),
-(102,'ProjectB','Giza',2),
-(103,'ProjectC','Alex',3);
 
-INSERT INTO WORKS_ON (SSN, PNumber, WorkingHours)
-VALUES
-('1',101,40),
-('2',101,20),
-('3',102,35),
-('4',103,30),
-('5',102,25);
-
-INSERT INTO WORKS_ON (SSN, PNumber, WorkingHours)
-VALUES
-('1',101,40),
-('2',101,20),
-('3',102,35),
-('4',103,30),
-('5',102,25);
-UPDATE EMPLOYEE
-SET DeptNo = 3
-WHERE SSN = '5';
-
-DELETE FROM DEPENDENT
-WHERE SSN = '1' AND DependentName = 'Laila';
-
-SELECT SSN, PNumber, WorkingHours
-FROM WORKS_ON;
-
-
+select name from sys.tables;
