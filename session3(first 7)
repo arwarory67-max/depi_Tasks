@@ -1,0 +1,74 @@
+/* 1 */
+select product_name, list_price,
+case 
+    when list_price < 300 then 'Economy'
+    when list_price between 300 and 999 then 'Standard'
+    when list_price between 1000 and 2499 then 'Premium'
+    else 'Luxury'
+end as price_category
+from production.products
+
+/* 2 */
+select order_id, order_date,
+case order_status
+    when 1 then 'Order Received'
+    when 2 then 'In Preparation'
+    when 3 then 'Order Cancelled'
+    when 4 then 'Order Delivered'
+end as status_description,
+case
+    when order_status = 1 and datediff(day, order_date, getdate()) > 5 then 'URGENT'
+    when order_status = 2 and datediff(day, order_date, getdate()) > 3 then 'HIGH'
+    else 'NORMAL'
+end as priority_level
+from sales.orders
+
+/* 3 */
+select s.first_name, s.last_name, count(o.order_id) as orders_handled,
+case
+    when count(o.order_id) = 0 then 'New Staff'
+    when count(o.order_id) between 1 and 10 then 'Junior Staff'
+    when count(o.order_id) between 11 and 25 then 'Senior Staff'
+    else 'Expert Staff'
+end as staff_level
+from sales.staffs s
+left join sales.orders o on s.staff_id = o.staff_id
+group by s.first_name, s.last_name
+
+/* 4 */
+select customer_id, first_name, last_name,
+isnull(phone, 'Phone Not Available') as phone_info,
+coalesce(phone, email, 'No Contact Method') as preferred_contact
+from sales.customers
+
+/* 5 */
+select p.product_name, s.quantity,
+isnull(p.list_price / nullif(s.quantity, 0), 0) as price_per_unit_calc,
+case 
+    when s.quantity > 0 then 'In Stock' 
+    else 'Out of Stock' 
+end as stock_status
+from production.stocks s
+join production.products p on s.product_id = p.product_id
+where s.store_id = 1
+
+/* 6 */
+select customer_id,
+coalesce(street, '') + ', ' + 
+coalesce(city, '') + ', ' + 
+coalesce(state, '') + ' ' + 
+coalesce(zip_code, 'No Zip') as formatted_address
+from sales.customers
+
+/* 7 */
+with customer_totals as (
+    select o.customer_id, sum(i.quantity * i.list_price) as total_spent
+    from sales.orders o
+    join sales.order_items i on o.order_id = i.order_id
+    group by o.customer_id
+)
+select c.first_name, c.last_name, ct.total_spent
+from sales.customers c
+join customer_totals ct on c.customer_id = ct.customer_id
+where ct.total_spent > 1500
+order by ct.total_spent desc
